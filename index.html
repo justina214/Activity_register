@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Registro de Actividades</title>
+<style>
+  body { font-family: system-ui, Arial, sans-serif; margin: 24px; max-width: 560px; }
+  label { display:block; margin: 12px 0 6px; font-weight:600; }
+  input, textarea { width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; }
+  button { margin-top:14px; padding:10px 14px; border:0; border-radius:10px; cursor:pointer; }
+  .row { display:flex; gap:10px; }
+  .row > * { flex:1; }
+  .item { background:#f8f9fa; padding:10px 12px; border-radius:10px; margin-top:8px; }
+  .muted { color:#666; font-size:12px; }
+</style>
+</head>
+<body>
+  <h1>Registro de actividades</h1>
+  <p class="muted">Los datos se guardan solo en este dispositivo. Podés exportar un PDF cuando quieras.</p>
+
+  <div class="row">
+    <div>
+      <label>Hora</label>
+      <input id="hora" type="time">
+    </div>
+  </div>
+  <label>Descripción de la actividad</label>
+  <textarea id="desc" rows="4" placeholder="Ej.: Caminata de 20 minutos"></textarea>
+
+  <div class="row">
+    <button id="agregar" style="background:#1a73e8;color:white;">Agregar</button>
+    <button id="exportar" style="background:#16a34a;color:white;">Exportar PDF</button>
+    <button id="borrar" style="background:#e11d48;color:white;">Borrar todo</button>
+  </div>
+
+  <h3 style="margin-top:24px;">Actividades de hoy</h3>
+  <div id="lista"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script>
+    const keyBase = 'reg_actividades_';
+    const hoyStr = new Date().toISOString().slice(0,10);
+    const key = keyBase + hoyStr;
+
+    function cargar() {
+      const data = JSON.parse(localStorage.getItem(key) || '[]');
+      const lista = document.getElementById('lista');
+      lista.innerHTML = '';
+      if (data.length === 0) {
+        lista.innerHTML = '<div class="muted">Sin actividades cargadas aún.</div>';
+        return;
+      }
+      data.sort((a,b)=>a.hora.localeCompare(b.hora));
+      data.forEach((it, i) => {
+        const d = document.createElement('div');
+        d.className = 'item';
+        d.innerHTML = `<strong>${it.hora || '(sin hora)'}</strong><br>${it.desc ? it.desc.replace(/\n/g,'<br>') : '(sin descripción)'}<br>
+          <span class="muted">#${i+1}</span>`;
+        lista.appendChild(d);
+      });
+    }
+
+    function guardarEntrada(hora, desc) {
+      const data = JSON.parse(localStorage.getItem(key) || '[]');
+      data.push({hora, desc});
+      localStorage.setItem(key, JSON.stringify(data));
+      cargar();
+    }
+
+    document.getElementById('agregar').onclick = () => {
+      const hora = document.getElementById('hora').value;
+      const desc = document.getElementById('desc').value.trim();
+      if (!hora && !desc) { alert('Cargá al menos la hora o una descripción.'); return; }
+      guardarEntrada(hora, desc);
+      document.getElementById('desc').value = '';
+    };
+
+    document.getElementById('borrar').onclick = () => {
+      if (confirm('¿Borrar todas las actividades de hoy?')) {
+        localStorage.removeItem(key);
+        cargar();
+      }
+    };
+
+    document.getElementById('exportar').onclick = () => {
+      const data = JSON.parse(localStorage.getItem(key) || '[]');
+      if (data.length === 0) { alert('No hay actividades para exportar.'); return; }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const margin = 48;
+      let y = margin;
+
+      const fecha = hoyStr;
+      doc.setFont('helvetica','bold'); doc.setFontSize(16);
+      doc.text('Informe de Actividades', margin, y); y += 22;
+      doc.setFont('helvetica','normal'); doc.setFontSize(11);
+      doc.text('Fecha: ' + fecha, margin, y); y += 18;
+
+      data.sort((a,b)=>a.hora.localeCompare(b.hora));
+      data.forEach((it, idx) => {
+        const linea = `${idx+1}. ${it.hora || '--:--'}  -  ${it.desc || '(sin descripción)'}`;
+        const lines = doc.splitTextToSize(linea, 540);
+        if (y + lines.length*14 > 800) { doc.addPage(); y = margin; }
+        doc.text(lines, margin, y);
+        y += lines.length*14 + 8;
+      });
+
+      doc.setDrawColor(200); doc.line(margin, 820, 595 - margin, 820);
+      doc.setFontSize(9);
+      doc.text('Generado localmente - ' + new Date().toLocaleString(), margin, 838);
+
+      const nombre = `Informe_Actividades_${fecha}.pdf`;
+      doc.save(nombre);
+    };
+
+    cargar();
+  </script>
+</body>
+</html>
