@@ -7,212 +7,332 @@
 
 <style>
   :root{
-    --bg:#f5f7fb;
-    --card:#ffffff;
-    --text:#111827;
-    --muted:#6b7280;
-    --primary:#1a73e8;
-    --success:#16a34a;
-    --danger:#e11d48;
-    --radius:14px;
+    --bg:#f5f7fb; --card:#ffffff; --text:#111827; --muted:#6b7280;
+    --primary:#1a73e8; --success:#16a34a; --danger:#e11d48; --radius:14px;
   }
-
   *, *::before, *::after { box-sizing: border-box; }
 
-  html, body { height:100%; }
+  html { height:100%; }
   body{
-    margin:0;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    color:var(--text);
-    background:var(--bg);
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color:var(--text); background:var(--bg);
+    display:flex; align-items:flex-start; justify-content:center;
+    min-height:100vh; overflow-y:auto;
     padding:48px clamp(20px, 4vw, 40px);
   }
 
   .card{
-    width:100%;
-    max-width:790px;
-    background:var(--card);
-    border-radius:var(--radius);
-    box-shadow: 0 8px 24px rgba(0,0,0,.08);
-    padding:32px 36px;
-    margin:0 auto;
+    width:100%; max-width:1000px; background:var(--card); border-radius:var(--radius);
+    box-shadow: 0 8px 24px rgba(0,0,0,.08); padding:32px 36px; margin:0 auto;
   }
 
   h1{ margin:0 0 6px; font-size:clamp(24px, 3.5vw, 36px); }
   .muted{ color:var(--muted); margin:0 0 22px; }
 
   label { display:block; margin: 14px 0 8px; font-weight:600; }
-  input, textarea {
-    width:100%;
-    padding:12px 14px;
-    border:1px solid #d1d5db;
-    border-radius:12px;
-    background:#fff;
-    font:inherit;
-    outline:none;
+  input, textarea{
+    width:100%; padding:12px 14px; border:1px solid #d1d5db; border-radius:12px; background:#fff; font:inherit; outline:none;
   }
-  input:focus, textarea:focus{
-    border-color:#93c5fd;
-    box-shadow:0 0 0 3px rgba(59,130,246,.15);
-  }
+  input:focus, textarea:focus{ border-color:#93c5fd; box-shadow:0 0 0 3px rgba(59,130,246,.15); }
 
-  .row{ display:flex; gap:12px; flex-wrap:wrap; }
-  .row > *{ flex:1; }
+  .grid{ display:grid; gap:12px; }
+  .grid-2{ grid-template-columns: 1fr 1fr; }
+  .grid-3{ grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 900px){ .grid-3{ grid-template-columns: 1fr; } }
+  @media (max-width: 720px){ .grid-2{ grid-template-columns: 1fr; } }
 
-  .btn{
-    display:inline-block;
-    padding:12px 18px;
-    border:0; border-radius:12px;
-    color:#fff; font-weight:600; cursor:pointer;
-  }
-  .btn-primary{ background:var(--primary); }
-  .btn-success{ background:var(--success); }
-  .btn-danger { background:var(--danger);  }
+  .btn{ display:inline-block; padding:12px 18px; border:0; border-radius:12px; color:#fff; font-weight:600; cursor:pointer; }
+  .btn-success{ background:var(--success); } .btn-danger{ background:var(--danger); }
   .btn:active{ transform:translateY(1px); }
 
-  .item{
-    background:#f8fafc;
-    padding:12px 14px;
-    border-radius:12px;
-    margin-top:10px;
-    border:1px solid #e5e7eb;
+  /* Tabla/Lista de horas */
+  .hours{ margin-top:10px; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#fff; }
+  .row-hour{
+    display:grid; grid-template-columns: 90px 1fr 1fr; gap:10px;
+    padding:10px; border-top:1px solid #eef2f7; align-items:center;
+  }
+  .row-hour:first-child{ border-top:none; }
+  .hour-badge{
+    font-weight:700; color:#111827; background:#f3f4f6; border:1px solid #e5e7eb;
+    padding:10px 12px; border-radius:10px; text-align:center; width:100%;
   }
 
   h3{ margin-top:28px; margin-bottom:8px; }
 
-  @media (max-width: 480px){
-    .card{ padding:20px 16px; }
+  /* Radio group */
+  .radio-group{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .radio-pill{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:8px 12px; border:1px solid #d1d5db; border-radius:999px; background:#fff; cursor:pointer;
   }
+  .radio-pill input{ accent-color: var(--primary); }
+
+  @media (max-width: 720px){
+    .row-hour{ grid-template-columns: 70px 1fr; }
+    .row-hour .field-symptoms{ grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 480px){ .card{ padding:20px 16px; } }
 </style>
 </head>
 
 <body>
   <div class="card">
     <h1>Registro de actividades</h1>
-    <p class="muted">Los datos se guardan solo en este dispositivo. Una vez que termine de cargar sus actividades, puede exportar el PDF.</p>
+    <p class="muted">Los datos se guardan solo en este dispositivo. Complete la cabecera, luego registre actividades y síntomas por hora. Al finalizar, exporte el PDF.</p>
 
-    <!-- NUEVOS CAMPOS -->
-    <div class="row">
+    <!-- CABECERA -->
+    <div class="grid grid-2">
       <div>
         <label>Nombre y Apellido</label>
-        <input id="nombre" type="text" placeholder="Ejemplo: Juan Pérez">
+        <input id="nombre" type="text" placeholder="Ej.: Juan Pérez">
       </div>
       <div>
-        <label>DNI</label>
-        <input id="dni" type="text" placeholder="Ejemplo: 12345678">
+        <label>Obra social</label>
+        <input id="obraSocial" type="text" placeholder="Ej.: OSDE 210">
       </div>
     </div>
 
-    <div class="row">
+    <div class="grid grid-3">
       <div>
-        <label>Hora</label>
-        <input id="hora" type="time">
+        <label>Edad</label>
+        <input id="edad" type="number" min="0" max="120" inputmode="numeric" placeholder="Ej.: 45">
+      </div>
+      <div>
+        <label>Peso (kg)</label>
+        <input id="peso" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Ej.: 70.5">
+      </div>
+      <div>
+        <label>Altura (m)</label>
+        <input id="altura" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ej.: 1.72">
       </div>
     </div>
 
-    <label>Descripción de la actividad</label>
-    <textarea id="desc" rows="4" placeholder="Ejemplo: Caminata de 20 minutos"></textarea>
+    <div class="grid grid-2">
+      <div>
+        <label>Médico solicitante</label>
+        <input id="medico" type="text" placeholder="Ej.: Dra. García">
+      </div>
+      <div>
+        <label>Fecha</label>
+        <input id="fecha" type="date">
+      </div>
+    </div>
 
-    <div class="row" style="margin-top:14px;">
-      <button id="agregar"  class="btn btn-primary">Agregar</button>
+    <div class="grid">
+      <div>
+        <label>Diagnóstico</label>
+        <textarea id="diagnostico" rows="3" placeholder="Ej.: Dolor lumbar crónico..."></textarea>
+      </div>
+      <div>
+        <label>Fármacos</label>
+        <textarea id="farmacos" rows="3" placeholder="Ej.: Ibuprofeno 400 mg cada 8 h..."></textarea>
+      </div>
+    </div>
+
+    <!-- NUEVO: Marcapasos (Sí/No) -->
+    <div class="grid" style="margin-top:6px;">
+      <div>
+        <label>Marque según corresponda: ¿Tiene marcapasos?</label>
+        <div class="radio-group" id="marcapasos-group">
+          <label class="radio-pill">
+            <input type="radio" name="marcapasos" value="Sí"> Sí
+          </label>
+          <label class="radio-pill">
+            <input type="radio" name="marcapasos" value="No"> No
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <h3>Registro horario (08:00 → 08:00)</h3>
+    <div id="hoursContainer" class="hours"></div>
+
+    <div class="grid grid-2" style="margin-top:14px;">
       <button id="exportar" class="btn btn-success">Exportar PDF</button>
-      <button id="borrar"   class="btn btn-danger">Borrar todo</button>
     </div>
-
-    <h3>Actividades de hoy</h3>
-    <div id="lista"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script>
-    const keyBase = 'reg_actividades_';
-    const hoyStr = new Date().toISOString().slice(0,10);
-    const key = keyBase + hoyStr;
+    // ======= utilidades y claves =======
+    const hdrKey = 'reg_cabecera';
+    const keyForDate = (dateStr) => 'reg_actividades_' + dateStr; // por fecha
+    const todayStr = new Date().toISOString().slice(0,10);
 
-    function cargar() {
-      const data = JSON.parse(localStorage.getItem(key) || '[]');
-      const lista = document.getElementById('lista');
-      lista.innerHTML = '';
-      if (data.length === 0) {
-        lista.innerHTML = '<div class="muted">Sin actividades cargadas aún.</div>';
-        return;
-      }
-      data.sort((a,b)=>a.hora.localeCompare(b.hora));
-      data.forEach((it, i) => {
-        const d = document.createElement('div');
-        d.className = 'item';
-        d.innerHTML = `<strong>${it.hora || '(sin hora)'}</strong><br>${it.desc ? it.desc.replace(/\n/g,'<br>') : '(sin descripción)'}<br>
-          <span class="muted">#${i+1}</span>`;
-        lista.appendChild(d);
+    // Fecha por defecto = hoy
+    const fechaInput = document.getElementById('fecha');
+    fechaInput.value ||= todayStr;
+
+    // ======= cabecera: guardar/cargar en localStorage =======
+    // campos simples (input/textarea)
+    const hdrFields = ['nombre','obraSocial','edad','peso','altura','medico','fecha','diagnostico','farmacos'];
+    function readMarcapasos(){
+      return document.querySelector('input[name="marcapasos"]:checked')?.value || '';
+    }
+    function setMarcapasos(val){
+      if (!val) return;
+      const r = document.querySelector(`input[name="marcapasos"][value="${val}"]`);
+      if (r) r.checked = true;
+    }
+
+    function loadHeader(){
+      const raw = localStorage.getItem(hdrKey);
+      if (!raw) return;
+      try{
+        const obj = JSON.parse(raw);
+        hdrFields.forEach(id => { if (obj[id] != null) document.getElementById(id).value = obj[id]; });
+        if (obj.marcapasos) setMarcapasos(obj.marcapasos);
+      }catch{}
+    }
+    function saveHeader(){
+      const obj = {};
+      hdrFields.forEach(id => obj[id] = document.getElementById(id).value);
+      obj.marcapasos = readMarcapasos();
+      localStorage.setItem(hdrKey, JSON.stringify(obj));
+    }
+
+    hdrFields.forEach(id => document.getElementById(id).addEventListener('input', saveHeader));
+    document.querySelectorAll('input[name="marcapasos"]').forEach(el => el.addEventListener('change', saveHeader));
+    loadHeader();
+
+    // ======= generar lista de horas 08→08 =======
+    function hoursArray(){
+      const arr = [];
+      for (let h=8; h<24; h++) arr.push((h+'').padStart(2,'0')+':00');
+      for (let h=0; h<8; h++)  arr.push((h+'').padStart(2,'0')+':00');
+      return arr; // 24 items
+    }
+
+    const hours = hoursArray();
+    const container = document.getElementById('hoursContainer');
+
+    function buildUIForDate(dateStr){
+      container.innerHTML = '';
+      const key = keyForDate(dateStr);
+      const data = JSON.parse(localStorage.getItem(key) || '{}'); // { "08:00":{act:"",sint:""}, ... }
+
+      hours.forEach((hh) => {
+        const row = document.createElement('div');
+        row.className = 'row-hour';
+
+        const b = document.createElement('div');
+        b.className = 'hour-badge';
+        b.textContent = hh;
+
+        const act = document.createElement('input');
+        act.type = 'text';
+        act.placeholder = 'Actividad que realiza';
+        act.value = (data[hh]?.act)||'';
+        act.className = 'field-activity';
+
+        const sint = document.createElement('input');
+        sint.type = 'text';
+        sint.placeholder = 'Síntomas que presenta';
+        sint.value = (data[hh]?.sint)||'';
+        sint.className = 'field-symptoms';
+
+        const save = () => {
+          const curr = JSON.parse(localStorage.getItem(key) || '{}');
+          curr[hh] = { act: act.value, sint: sint.value };
+          localStorage.setItem(key, JSON.stringify(curr));
+        };
+        act.addEventListener('input', save);
+        sint.addEventListener('input', save);
+
+        row.appendChild(b);
+        row.appendChild(act);
+        row.appendChild(sint);
+        container.appendChild(row);
       });
     }
 
-    function guardarEntrada(hora, desc) {
-      const data = JSON.parse(localStorage.getItem(key) || '[]');
-      data.push({hora, desc});
-      localStorage.setItem(key, JSON.stringify(data));
-      cargar();
-    }
+    buildUIForDate(fechaInput.value);
 
-    document.getElementById('agregar').onclick = () => {
-      const hora = document.getElementById('hora').value;
-      const desc = document.getElementById('desc').value.trim();
-      if (!hora && !desc) { alert('Cargá al menos la hora o una descripción.'); return; }
-      guardarEntrada(hora, desc);
-      document.getElementById('desc').value = '';
-    };
+    fechaInput.addEventListener('change', (e) => {
+      const d = e.target.value || todayStr;
+      document.getElementById('fecha').value = d;
+      saveHeader();
+      buildUIForDate(d);
+    });
 
-    document.getElementById('borrar').onclick = () => {
-      if (confirm('¿Borrar todas las actividades de hoy?')) {
-        localStorage.removeItem(key);
-        cargar();
-      }
-    };
 
+    
+    // ======= exportar PDF =======
     document.getElementById('exportar').onclick = () => {
-      const data = JSON.parse(localStorage.getItem(key) || '[]');
-      if (data.length === 0) { alert('No hay actividades para exportar.'); return; }
+      const d = fechaInput.value || todayStr;
+      const key = keyForDate(d);
+      const data = JSON.parse(localStorage.getItem(key) || '{}');
 
-      const nombre = document.getElementById('nombre').value.trim();
-      const dni = document.getElementById('dni').value.trim();
+      const list = hours
+        .map(hh => ({hh, ...data[hh]}))
+        .filter(x => (x.act && x.act.trim()) || (x.sint && x.sint.trim()));
+
+      if (list.length === 0) { alert('No hay actividades/síntomas cargados para exportar.'); return; }
+
+      const nombre      = (document.getElementById('nombre').value||'').trim();
+      const obraSocial  = (document.getElementById('obraSocial').value||'').trim();
+      const edad        = (document.getElementById('edad').value||'').trim();
+      const peso        = (document.getElementById('peso').value||'').trim();
+      const altura      = (document.getElementById('altura').value||'').trim();
+      const medico      = (document.getElementById('medico').value||'').trim();
+      const diagnostico = (document.getElementById('diagnostico').value||'').trim();
+      const farmacos    = (document.getElementById('farmacos').value||'').trim();
+      const marcapasos  = readMarcapasos();
+
+      let imc = null;
+      const p = parseFloat(peso), a = parseFloat(altura);
+      if (!isNaN(p) && !isNaN(a) && a>0) imc = (p/(a*a)).toFixed(1);
 
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-      const margin = 48;
-      let y = margin;
+      const margin = 48; let y = margin;
 
-      const fecha = hoyStr;
       doc.setFont('helvetica','bold'); doc.setFontSize(16);
       doc.text('Informe de Actividades', margin, y); y += 22;
 
       doc.setFont('helvetica','normal'); doc.setFontSize(11);
-      doc.text('Fecha: ' + fecha, margin, y); y += 14;
-      if (nombre) { doc.text('Nombre y Apellido: ' + nombre, margin, y); y += 14; }
-      if (dni) { doc.text('DNI: ' + dni, margin, y); y += 18; }
+      const headerLines = [
+        ['Fecha', d],
+        ['Nombre y Apellido', nombre || '-'],
+        ['Obra social', obraSocial || '-'],
+        ['Edad', edad || '-'],
+        ['Peso (kg)', peso || '-'],
+        ['Altura (m)', altura || '-'],
+        ...(imc ? [['IMC', imc]] : []),
+        ['Médico solicitante', medico || '-'],
+        ['Tiene marcapasos', marcapasos || '-']
+      ];
+      headerLines.forEach(([k,v]) => { doc.text(`${k}: ${v}`, margin, y); y += 14; });
 
-      data.sort((a,b)=>a.hora.localeCompare(b.hora));
-      data.forEach((it, idx) => {
-        const linea = `${idx+1}. ${it.hora || '--:--'}  -  ${it.desc || '(sin descripción)'}`;
+      if (diagnostico){
+        y += 6; doc.setFont('helvetica','bold'); doc.text('Diagnóstico', margin, y); y += 14;
+        doc.setFont('helvetica','normal');
+        const dl = doc.splitTextToSize(diagnostico, 540); doc.text(dl, margin, y); y += dl.length*14 + 8;
+      }
+      if (farmacos){
+        y += 6; doc.setFont('helvetica','bold'); doc.text('Fármacos', margin, y); y += 14;
+        doc.setFont('helvetica','normal');
+        const fl = doc.splitTextToSize(farmacos, 540); doc.text(fl, margin, y); y += fl.length*14 + 8;
+      }
+
+      y += 8; doc.setFont('helvetica','bold'); doc.text('Registro horario', margin, y); y += 16;
+      doc.setFont('helvetica','normal');
+
+      list.forEach((it) => {
+        const linea = `${it.hh}  •  Actividad: ${it.act||'-'}  •  Síntomas: ${it.sint||'-'}`;
         const lines = doc.splitTextToSize(linea, 540);
         if (y + lines.length*14 > 800) { doc.addPage(); y = margin; }
         doc.text(lines, margin, y);
         y += lines.length*14 + 8;
       });
 
-      doc.setDrawColor(200);
-      doc.line(margin, 820, 595 - margin, 820);
-      doc.setFontSize(9);
-      doc.text('Generado localmente - ' + new Date().toLocaleString(), margin, 838);
+      doc.setDrawColor(200); doc.line(margin, 820, 595 - margin, 820);
+      doc.setFontSize(9); doc.text('Generado localmente - ' + new Date().toLocaleString(), margin, 838);
 
-      const nombreArchivo = nombre ? nombre.replace(/\s+/g, '_') : 'Informe';
-      const filename = `${nombreArchivo}_Actividades_${fecha}.pdf`;
-      doc.save(filename);
+      const nombreArchivo = (nombre ? nombre.replace(/\s+/g,'_') : 'Informe') + `_Actividades_${d}.pdf`;
+      doc.save(nombreArchivo);
     };
-
-    cargar();
   </script>
 </body>
 </html>
