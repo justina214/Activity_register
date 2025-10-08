@@ -4,38 +4,127 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Registro de Actividades</title>
+
 <style>
-  body { font-family: system-ui, Arial, sans-serif; margin: 24px; max-width: 560px; }
-  label { display:block; margin: 12px 0 6px; font-weight:600; }
-  input, textarea { width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; }
-  button { margin-top:14px; padding:10px 14px; border:0; border-radius:10px; cursor:pointer; }
-  .row { display:flex; gap:10px; }
-  .row > * { flex:1; }
-  .item { background:#f8f9fa; padding:10px 12px; border-radius:10px; margin-top:8px; }
-  .muted { color:#666; font-size:12px; }
+  :root{
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --text:#111827;
+    --muted:#6b7280;
+    --primary:#1a73e8;
+    --success:#16a34a;
+    --danger:#e11d48;
+    --radius:14px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body { height:100%; }
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color:var(--text);
+    background:var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:48px clamp(20px, 4vw, 40px);
+  }
+
+  .card{
+    width:100%;
+    max-width:790px;
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    padding:32px 36px;
+    margin:0 auto;
+  }
+
+  h1{ margin:0 0 6px; font-size:clamp(24px, 3.5vw, 36px); }
+  .muted{ color:var(--muted); margin:0 0 22px; }
+
+  label { display:block; margin: 14px 0 8px; font-weight:600; }
+  input, textarea {
+    width:100%;
+    padding:12px 14px;
+    border:1px solid #d1d5db;
+    border-radius:12px;
+    background:#fff;
+    font:inherit;
+    outline:none;
+  }
+  input:focus, textarea:focus{
+    border-color:#93c5fd;
+    box-shadow:0 0 0 3px rgba(59,130,246,.15);
+  }
+
+  .row{ display:flex; gap:12px; flex-wrap:wrap; }
+  .row > *{ flex:1; }
+
+  .btn{
+    display:inline-block;
+    padding:12px 18px;
+    border:0; border-radius:12px;
+    color:#fff; font-weight:600; cursor:pointer;
+  }
+  .btn-primary{ background:var(--primary); }
+  .btn-success{ background:var(--success); }
+  .btn-danger { background:var(--danger);  }
+  .btn:active{ transform:translateY(1px); }
+
+  .item{
+    background:#f8fafc;
+    padding:12px 14px;
+    border-radius:12px;
+    margin-top:10px;
+    border:1px solid #e5e7eb;
+  }
+
+  h3{ margin-top:28px; margin-bottom:8px; }
+
+  @media (max-width: 480px){
+    .card{ padding:20px 16px; }
+  }
 </style>
 </head>
+
 <body>
-  <h1>Registro de actividades</h1>
-  <p class="muted">Los datos se guardan solo en este dispositivo. Podés exportar un PDF cuando quieras.</p>
+  <div class="card">
+    <h1>Registro de actividades</h1>
+    <p class="muted">Los datos se guardan solo en este dispositivo. Una vez que termine de cargar sus actividades, puede exportar el PDF.</p>
 
-  <div class="row">
-    <div>
-      <label>Hora</label>
-      <input id="hora" type="time">
+    <!-- NUEVOS CAMPOS -->
+    <div class="row">
+      <div>
+        <label>Nombre y Apellido</label>
+        <input id="nombre" type="text" placeholder="Ejemplo: Juan Pérez">
+      </div>
+      <div>
+        <label>DNI</label>
+        <input id="dni" type="text" placeholder="Ejemplo: 12345678">
+      </div>
     </div>
-  </div>
-  <label>Descripción de la actividad</label>
-  <textarea id="desc" rows="4" placeholder="Ej.: Caminata de 20 minutos"></textarea>
 
-  <div class="row">
-    <button id="agregar" style="background:#1a73e8;color:white;">Agregar</button>
-    <button id="exportar" style="background:#16a34a;color:white;">Exportar PDF</button>
-    <button id="borrar" style="background:#e11d48;color:white;">Borrar todo</button>
-  </div>
+    <div class="row">
+      <div>
+        <label>Hora</label>
+        <input id="hora" type="time">
+      </div>
+    </div>
 
-  <h3 style="margin-top:24px;">Actividades de hoy</h3>
-  <div id="lista"></div>
+    <label>Descripción de la actividad</label>
+    <textarea id="desc" rows="4" placeholder="Ejemplo: Caminata de 20 minutos"></textarea>
+
+    <div class="row" style="margin-top:14px;">
+      <button id="agregar"  class="btn btn-primary">Agregar</button>
+      <button id="exportar" class="btn btn-success">Exportar PDF</button>
+      <button id="borrar"   class="btn btn-danger">Borrar todo</button>
+    </div>
+
+    <h3>Actividades de hoy</h3>
+    <div id="lista"></div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script>
@@ -86,6 +175,10 @@
     document.getElementById('exportar').onclick = () => {
       const data = JSON.parse(localStorage.getItem(key) || '[]');
       if (data.length === 0) { alert('No hay actividades para exportar.'); return; }
+
+      const nombre = document.getElementById('nombre').value.trim();
+      const dni = document.getElementById('dni').value.trim();
+
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit: 'pt', format: 'a4' });
       const margin = 48;
@@ -94,8 +187,11 @@
       const fecha = hoyStr;
       doc.setFont('helvetica','bold'); doc.setFontSize(16);
       doc.text('Informe de Actividades', margin, y); y += 22;
+
       doc.setFont('helvetica','normal'); doc.setFontSize(11);
-      doc.text('Fecha: ' + fecha, margin, y); y += 18;
+      doc.text('Fecha: ' + fecha, margin, y); y += 14;
+      if (nombre) { doc.text('Nombre y Apellido: ' + nombre, margin, y); y += 14; }
+      if (dni) { doc.text('DNI: ' + dni, margin, y); y += 18; }
 
       data.sort((a,b)=>a.hora.localeCompare(b.hora));
       data.forEach((it, idx) => {
@@ -106,12 +202,14 @@
         y += lines.length*14 + 8;
       });
 
-      doc.setDrawColor(200); doc.line(margin, 820, 595 - margin, 820);
+      doc.setDrawColor(200);
+      doc.line(margin, 820, 595 - margin, 820);
       doc.setFontSize(9);
       doc.text('Generado localmente - ' + new Date().toLocaleString(), margin, 838);
 
-      const nombre = `Informe_Actividades_${fecha}.pdf`;
-      doc.save(nombre);
+      const nombreArchivo = nombre ? nombre.replace(/\s+/g, '_') : 'Informe';
+      const filename = `${nombreArchivo}_Actividades_${fecha}.pdf`;
+      doc.save(filename);
     };
 
     cargar();
